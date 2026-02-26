@@ -1,0 +1,61 @@
+// AgentParser - Single animation frame
+// Based on Cosmo/Clippy (https://github.com/Cosmo/Clippy) - adapted for personal use
+
+import Foundation
+
+struct AgentFrame {
+    let duration: Int
+    let soundEffect: String?
+    let exitBranch: Int?
+    let branchings: [AgentBranching]
+    let images: [AgentImage]
+
+    var durationInSeconds: Double {
+        Double(duration) / 100
+    }
+}
+
+extension AgentFrame {
+    static func parse(content: String) -> AgentFrame? {
+        var branchings: [AgentBranching] = []
+        if let branchingText = content.fetchInclusive("DefineBranching", until: "EndBranching").first {
+            branchings = AgentBranching.parse(content: branchingText)
+        }
+
+        let imageTexts = content.fetchInclusive("DefineImage", until: "EndImage")
+        let images = imageTexts.compactMap { AgentImage.parse(content: $0) }
+
+        var duration: Int?
+        var exitBranch: Int?
+        var soundEffect: String?
+
+        content.enumerateLines { (line: String, stop: inout Bool) in
+            let trimmedLine = line.trimmingCharacters(in: .whitespacesAndNewlines)
+            if trimmedLine.starts(with: "Duration ") {
+                duration = trimmedLine.intValueOfKeyValue(onKey: "Duration")
+            }
+            if trimmedLine.starts(with: "ExitBranch ") {
+                exitBranch = trimmedLine.intValueOfKeyValue(onKey: "ExitBranch")
+            }
+            if trimmedLine.starts(with: "SoundEffect ") {
+                soundEffect = trimmedLine.stringValueOfKeyValue(onKey: "SoundEffect")?.removedQuotes()
+            }
+        }
+
+        if let duration = duration {
+            return AgentFrame(duration: duration, soundEffect: soundEffect,
+                            exitBranch: exitBranch, branchings: branchings, images: images)
+        }
+        return nil
+    }
+}
+
+extension AgentFrame {
+    var soundIndex: Int? {
+        guard let soundEffect = soundEffect else { return nil }
+        let cleanName = soundEffect
+            .replacingOccurrences(of: "Audio\\", with: "")
+            .replacingOccurrences(of: ".wav", with: "")
+        return Int(cleanName)
+    }
+}

@@ -1,0 +1,34 @@
+// AgentParser - Image reference within a frame
+// Based on Cosmo/Clippy (https://github.com/Cosmo/Clippy) - adapted for personal use
+
+import Foundation
+
+struct AgentImage {
+    let fileName: String
+}
+
+extension AgentImage {
+    static func parse(content: String) -> AgentImage? {
+        var fileName: String?
+        content.enumerateLines { (line: String, stop: inout Bool) in
+            let trimmedLine = line.trimmingCharacters(in: .whitespacesAndNewlines)
+            if trimmedLine.starts(with: "Filename ") {
+                fileName = trimmedLine.stringValueOfKeyValue(onKey: "Filename")?.removedQuotes()
+            }
+        }
+
+        if let fileName = fileName {
+            return AgentImage(fileName: fileName)
+        }
+        return nil
+    }
+}
+
+extension AgentImage {
+    var imageNumber: Int {
+        let cleanName = fileName
+            .replacingOccurrences(of: "Images\\", with: "")
+            .replacingOccurrences(of: ".bmp", with: "")
+        return Int(cleanName) ?? 0
+    }
+}
