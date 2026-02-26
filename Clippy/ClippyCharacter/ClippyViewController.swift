@@ -18,13 +18,14 @@ final class ClippyViewController: NSViewController {
     var store: ClipboardStore?
 
     override func loadView() {
-        // Use a container NSView (NOT SKView directly) so we can layer
-        // a transparent click overlay on top as a sibling view.
-        // SKView's hit testing routes events to SKScene, bypassing subviews.
-        let container = NSView()
+        // Use a ClickThroughView container so clicks in transparent areas above
+        // the character pass through to the desktop instead of being swallowed.
+        let container = ClickThroughView()
         container.wantsLayer = true
 
-        skView = SKView()
+        // RenderOnlySKView never claims mouse hits — all interaction goes
+        // through the ClickOverlayView, which is sized to the character sprite.
+        skView = RenderOnlySKView()
         skView.allowsTransparency = true
         skView.translatesAutoresizingMaskIntoConstraints = false
         container.addSubview(skView)
@@ -519,5 +520,34 @@ private class ClickOverlayView: NSView {
 
     override func rightMouseUp(with event: NSEvent) {
         onRightClick?(event)
+    }
+}
+
+// MARK: - Click-Through Container
+
+/// Container view that returns nil (instead of self) when no subview claims a hit.
+/// This allows clicks in transparent areas above the Clippy character to pass through
+/// the borderless window to the desktop or apps underneath.
+private class ClickThroughView: NSView {
+    override func hitTest(_ point: NSPoint) -> NSView? {
+        guard frame.contains(point) else { return nil }
+        let localPoint = convert(point, from: superview)
+        for subview in subviews.reversed() {
+            if let hit = subview.hitTest(localPoint) {
+                return hit
+            }
+        }
+        // No subview claimed the hit — pass through instead of returning self
+        return nil
+    }
+}
+
+// MARK: - Rendering-Only SKView
+
+/// SKView subclass that never intercepts mouse events.
+/// All user interaction is handled by the ClickOverlayView; this view only renders the sprite.
+private class RenderOnlySKView: SKView {
+    override func hitTest(_ point: NSPoint) -> NSView? {
+        return nil
     }
 }
