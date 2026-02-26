@@ -51,10 +51,13 @@ final class ClippyViewController: NSViewController {
         overlay.wantsLayer = true
         overlay.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(overlay)
+        // Only cover the bottom half of the window — the character sits at the
+        // bottom, and the upper area is empty transparent space that shouldn't
+        // intercept clicks.
         NSLayoutConstraint.activate([
             overlay.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             overlay.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            overlay.topAnchor.constraint(equalTo: view.topAnchor),
+            overlay.heightAnchor.constraint(equalTo: view.heightAnchor, multiplier: 0.5),
             overlay.bottomAnchor.constraint(equalTo: view.bottomAnchor),
         ])
 
