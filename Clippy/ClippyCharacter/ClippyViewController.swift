@@ -11,6 +11,8 @@ final class ClippyViewController: NSViewController {
     private var panelLocalClickMonitor: Any?
     private var panelGlobalClickMonitor: Any?
     private var agent: Agent?
+    private var clickOverlay: ClickOverlayView?
+    private var overlayHeightConstraint: NSLayoutConstraint?
 
     // Reference to the shared store so we can build clipboard menus
     var store: ClipboardStore?
@@ -51,13 +53,16 @@ final class ClippyViewController: NSViewController {
         overlay.wantsLayer = true
         overlay.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(overlay)
-        // Only cover the bottom half of the window — the character sits at the
-        // bottom, and the upper area is empty transparent space that shouldn't
-        // intercept clicks.
+        self.clickOverlay = overlay
+
+        // The overlay height will be updated in loadAgent / applyScale to match
+        // the actual character sprite size. Start with a sensible default.
+        let heightConstraint = overlay.heightAnchor.constraint(equalToConstant: AppConstants.clippyWindowSize.height)
+        self.overlayHeightConstraint = heightConstraint
         NSLayoutConstraint.activate([
             overlay.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             overlay.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            overlay.heightAnchor.constraint(equalTo: view.heightAnchor, multiplier: 0.5),
+            heightConstraint,
             overlay.bottomAnchor.constraint(equalTo: view.bottomAnchor),
         ])
 
@@ -87,6 +92,9 @@ final class ClippyViewController: NSViewController {
             window.setContentSize(newSize)
             scene.size = newSize
             scene.agentSprite.position = CGPoint(x: newSize.width / 2, y: charSize.height / 2)
+
+            // Size the click overlay to match the character sprite height
+            overlayHeightConstraint?.constant = charSize.height
         }
 
         animationController = ClippyAnimationController(
@@ -123,11 +131,15 @@ final class ClippyViewController: NSViewController {
 
         // Update SpriteKit scene
         scene.size = newSize
+        let scaledCharHeight = charSize.height * scale
         scene.agentSprite.size = CGSize(
             width: charSize.width * scale,
-            height: charSize.height * scale
+            height: scaledCharHeight
         )
-        scene.agentSprite.position = CGPoint(x: newSize.width / 2, y: charSize.height * scale / 2)
+        scene.agentSprite.position = CGPoint(x: newSize.width / 2, y: scaledCharHeight / 2)
+
+        // Resize click overlay to match the scaled character
+        overlayHeightConstraint?.constant = scaledCharHeight
     }
 
     // MARK: - Click Handling
