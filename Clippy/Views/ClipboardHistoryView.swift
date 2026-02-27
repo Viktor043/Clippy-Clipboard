@@ -9,6 +9,8 @@ struct ClipboardHistoryView: View {
     @State private var hostWindow: NSWindow?
     @AppStorage(AppConstants.appFontNameKey) private var appFontName: String = AppConstants.defaultFontName
     @AppStorage(AppConstants.appFontSizeKey) private var appFontSize: Double = AppConstants.defaultFontSize
+    @AppStorage(AppConstants.popoverWidthKey) private var popoverWidth: Double = Double(AppConstants.defaultPopoverWidth)
+    @AppStorage(AppConstants.popoverHeightKey) private var popoverHeight: Double = Double(AppConstants.defaultPopoverHeight)
     var onPaste: (() -> Void)?
 
     private var appFont: Font {
@@ -105,8 +107,8 @@ struct ClipboardHistoryView: View {
             .clipped()
         }
         .frame(
-            width: AppConstants.popoverWidth,
-            height: AppConstants.popoverHeight
+            width: CGFloat(popoverWidth),
+            height: CGFloat(popoverHeight)
         )
         .background(WindowAccessor(window: $hostWindow))
         .onDisappear {
@@ -226,6 +228,10 @@ struct PopoverSettingsView: View {
     @AppStorage("clippyScale") var clippyScale: Double = 1.0
     @AppStorage(AppConstants.appFontNameKey) var appFontName: String = AppConstants.defaultFontName
     @AppStorage(AppConstants.appFontSizeKey) var appFontSize: Double = AppConstants.defaultFontSize
+    @AppStorage(AppConstants.popoverWidthKey) var popoverWidth: Double = Double(AppConstants.defaultPopoverWidth)
+    @AppStorage(AppConstants.popoverHeightKey) var popoverHeight: Double = Double(AppConstants.defaultPopoverHeight)
+    @AppStorage(AppConstants.panelOpacityKey) var panelOpacity: Double = AppConstants.defaultPanelOpacity
+    @AppStorage(AppConstants.panelBlurKey) var panelBlurIntensity: Double = AppConstants.defaultPanelBlur
 
     @State private var excludedApps: [String] = UserDefaults.standard.stringArray(forKey: "excludedApps") ?? []
     @State private var newAppBundleID: String = ""
@@ -253,44 +259,65 @@ struct PopoverSettingsView: View {
                 .background(Color.primary.opacity(0.03))
                 .cornerRadius(8)
 
-                // Clips Management
+                // Menus
                 VStack(alignment: .leading, spacing: 8) {
-                    Label("Clips Management", systemImage: "doc.on.clipboard")
+                    Label("Menus", systemImage: "rectangle.on.rectangle")
                         .font(.system(size: 12, weight: .semibold))
                         .foregroundColor(.secondary)
 
-                    // History limit
                     HStack {
-                        Text("Remember up to")
+                        Text("Width")
                             .font(.system(size: 12))
                         Spacer()
-                        Picker("", selection: $maxHistoryItems) {
-                            Text("25").tag(25)
-                            Text("50").tag(50)
-                            Text("100").tag(100)
-                            Text("200").tag(200)
-                            Text("500").tag(500)
-                        }
-                        .labelsHidden()
-                        .frame(width: 80)
-                        Text("items")
-                            .font(.system(size: 12))
+                        Text("\(Int(popoverWidth)) px")
+                            .font(.system(size: 11))
+                            .foregroundColor(.secondary)
+                            .frame(width: 45, alignment: .trailing)
                     }
+                    Slider(value: $popoverWidth,
+                           in: Double(AppConstants.minPopoverWidth)...Double(AppConstants.maxPopoverWidth),
+                           step: 10)
 
-                    // Character limit per item
                     HStack {
-                        Text("Max chars per item")
+                        Text("Height")
                             .font(.system(size: 12))
                         Spacer()
-                        Picker("", selection: $maxCharactersPerItem) {
-                            Text("5K").tag(5_000)
-                            Text("10K").tag(10_000)
-                            Text("20K").tag(20_000)
-                            Text("50K").tag(50_000)
-                        }
-                        .labelsHidden()
-                        .frame(width: 80)
+                        Text("\(Int(popoverHeight)) px")
+                            .font(.system(size: 11))
+                            .foregroundColor(.secondary)
+                            .frame(width: 45, alignment: .trailing)
                     }
+                    Slider(value: $popoverHeight,
+                           in: Double(AppConstants.minPopoverHeight)...Double(AppConstants.maxPopoverHeight),
+                           step: 10)
+
+                    Divider()
+
+                    HStack {
+                        Text("Transparency")
+                            .font(.system(size: 12))
+                        Spacer()
+                        Text("\(Int(panelOpacity * 100))%")
+                            .font(.system(size: 11))
+                            .foregroundColor(.secondary)
+                            .frame(width: 35, alignment: .trailing)
+                    }
+                    Slider(value: $panelOpacity,
+                           in: AppConstants.minPanelOpacity...AppConstants.maxPanelOpacity,
+                           step: 0.05)
+
+                    HStack {
+                        Text("Background blur")
+                            .font(.system(size: 12))
+                        Spacer()
+                        Text("\(Int(panelBlurIntensity * 100))%")
+                            .font(.system(size: 11))
+                            .foregroundColor(.secondary)
+                            .frame(width: 35, alignment: .trailing)
+                    }
+                    Slider(value: $panelBlurIntensity,
+                           in: AppConstants.minPanelBlur...AppConstants.maxPanelBlur,
+                           step: 0.05)
                 }
                 .padding(10)
                 .background(Color.primary.opacity(0.03))
@@ -330,15 +357,14 @@ struct PopoverSettingsView: View {
                         .labelsHidden()
                         .frame(width: 80)
                     }
-
                 }
                 .padding(10)
                 .background(Color.primary.opacity(0.03))
                 .cornerRadius(8)
 
-                // Clippy Animation
+                // Clippy Character
                 VStack(alignment: .leading, spacing: 8) {
-                    Label("Clippy Animation", systemImage: "figure.wave")
+                    Label("Clippy Character", systemImage: "figure.wave")
                         .font(.system(size: 12, weight: .semibold))
                         .foregroundColor(.secondary)
 
@@ -373,6 +399,41 @@ struct PopoverSettingsView: View {
                     Label("Advanced", systemImage: "wrench.and.screwdriver")
                         .font(.system(size: 12, weight: .semibold))
                         .foregroundColor(.secondary)
+
+                    // History limit
+                    HStack {
+                        Text("Remember up to")
+                            .font(.system(size: 12))
+                        Spacer()
+                        Picker("", selection: $maxHistoryItems) {
+                            Text("25").tag(25)
+                            Text("50").tag(50)
+                            Text("100").tag(100)
+                            Text("200").tag(200)
+                            Text("500").tag(500)
+                        }
+                        .labelsHidden()
+                        .frame(width: 80)
+                        Text("items")
+                            .font(.system(size: 12))
+                    }
+
+                    // Character limit per item
+                    HStack {
+                        Text("Max chars per item")
+                            .font(.system(size: 12))
+                        Spacer()
+                        Picker("", selection: $maxCharactersPerItem) {
+                            Text("5K").tag(5_000)
+                            Text("10K").tag(10_000)
+                            Text("20K").tag(20_000)
+                            Text("50K").tag(50_000)
+                        }
+                        .labelsHidden()
+                        .frame(width: 80)
+                    }
+
+                    Divider()
 
                     // Capture types
                     Text("Capture types:")

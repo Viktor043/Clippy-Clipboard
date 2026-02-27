@@ -74,10 +74,15 @@ final class DetailPanelController {
             hostingView.bottomAnchor.constraint(equalTo: effectView.bottomAnchor),
         ])
 
+        // Read dynamic size from settings
         let panelSize = NSSize(
-            width: AppConstants.popoverWidth,
-            height: AppConstants.popoverHeight
+            width: CGFloat(UserDefaults.standard.object(forKey: AppConstants.popoverWidthKey) as? Double ?? Double(AppConstants.defaultPopoverWidth)),
+            height: CGFloat(UserDefaults.standard.object(forKey: AppConstants.popoverHeightKey) as? Double ?? Double(AppConstants.defaultPopoverHeight))
         )
+
+        // Apply blur intensity to the effect view
+        let blurIntensity = UserDefaults.standard.object(forKey: AppConstants.panelBlurKey) as? Double ?? AppConstants.defaultPanelBlur
+        effectView.alphaValue = CGFloat(blurIntensity)
 
         // Position to the left of the popover, clamped to the popover's screen
         let panelOrigin = clampedOrigin(
@@ -112,6 +117,10 @@ final class DetailPanelController {
             newPanel.orderFront(nil)
             panel = newPanel
         }
+
+        // Apply panel-level transparency
+        let opacity = UserDefaults.standard.object(forKey: AppConstants.panelOpacityKey) as? Double ?? AppConstants.defaultPanelOpacity
+        panel?.alphaValue = CGFloat(opacity)
     }
 
     /// Called by popoverDidClose delegates. If the mouse is over the detail panel,
@@ -305,6 +314,8 @@ struct DetailPanelView: View {
     let fontName: String
     var onClose: () -> Void
 
+    @AppStorage(AppConstants.popoverWidthKey) private var panelWidth: Double = Double(AppConstants.defaultPopoverWidth)
+    @AppStorage(AppConstants.popoverHeightKey) private var panelHeight: Double = Double(AppConstants.defaultPopoverHeight)
     @State private var copyConfirmation = false
 
     private var appFont: Font {
@@ -388,7 +399,7 @@ struct DetailPanelView: View {
                 .padding(.vertical, 8)
             }
         }
-        .frame(width: AppConstants.popoverWidth, height: AppConstants.popoverHeight)
+        .frame(width: CGFloat(panelWidth), height: CGFloat(panelHeight))
     }
 
     private func copyAll() {

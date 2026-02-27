@@ -7,10 +7,14 @@ final class MenuBarManager: NSObject, ObservableObject, NSPopoverDelegate {
     private let store: ClipboardStore
     private var localClickMonitor: Any?
     private var globalClickMonitor: Any?
+    private var widthObserver: NSKeyValueObservation?
+    private var heightObserver: NSKeyValueObservation?
+    private var opacityObserver: NSKeyValueObservation?
 
     init(store: ClipboardStore) {
         self.store = store
         super.init()
+        observePanelSettings()
     }
 
     func setupStatusBar() {
@@ -26,10 +30,7 @@ final class MenuBarManager: NSObject, ObservableObject, NSPopoverDelegate {
 
         if popover == nil {
             popover = NSPopover()
-            popover?.contentSize = NSSize(
-                width: AppConstants.popoverWidth,
-                height: AppConstants.popoverHeight
-            )
+            popover?.contentSize = currentPanelSize()
             // Use applicationDefined so we control dismissal via click monitors.
             // This prevents the popover from auto-closing when the user clicks
             // inside the detail panel (e.g. the close button).
@@ -55,6 +56,9 @@ final class MenuBarManager: NSObject, ObservableObject, NSPopoverDelegate {
         if popover.isShown {
             closePopover()
         } else {
+            // Update size to latest settings before showing
+            popover.contentSize = currentPanelSize()
+
             let historyView = ClipboardHistoryView(store: store) { [weak self] in
                 self?.closePopover()
             }
@@ -63,6 +67,9 @@ final class MenuBarManager: NSObject, ObservableObject, NSPopoverDelegate {
 
             // Ensure popover becomes key window for keyboard input
             popover.contentViewController?.view.window?.makeKey()
+
+            // Apply panel transparency
+            applyPopoverOpacity()
 
             // Install click-outside monitors to dismiss
             installClickMonitors()
@@ -131,6 +138,38 @@ final class MenuBarManager: NSObject, ObservableObject, NSPopoverDelegate {
         if let monitor = globalClickMonitor {
             NSEvent.removeMonitor(monitor)
             globalClickMonitor = nil
+        }
+    }
+
+    // MARK: - Dynamic Panel Size & Appearance
+
+    private func currentPanelSize() -> NSSize {
+        let w = UserDefaults.standard.object(forKey: AppConstants.popoverWidthKey) as? Double ?? Double(AppConstants.defaultPopoverWidth)
+        let h = UserDefaults.standard.object(forKey: AppConstants.popoverHeightKey) as? Double ?? Double(AppConstants.defaultPopoverHeight)
+        return NSSize(width: w, height: h)
+    }
+
+    private func applyPopoverOpacity() {
+        guard let popover = popover, popover.isShown else { return }
+        let opacity = UserDefaults.standard.object(forKey: AppConstants.panelOpacityKey) as? Double ?? AppConstants.defaultPanelOpacity
+        popover.contentViewController?.view.window?.alphaValue = CGFloat(opacity)
+    }
+
+    private func observePanelSettings() {
+        widthObserver = UserDefaults.standard.observe(\.popoverWidth, options: [.new]) { [weak self] _, _ in
+            DispatchQueue.main.async {
+                guard let self = self, let popover = self.popover, popover.isShown else { return }
+                popover.contentSize = self.currentPanelSize()
+            }
+        }
+        heightObserver = UserDefaults.standard.observe(\.popoverHeight, options: [.new]) { [weak self] _, _ in
+            DispatchQueue.main.async {
+                guard let self = self, let popover = self.popover, popover.isShown else { return }
+                popover.contentSize = self.currentPanelSize()
+            }
+        }
+        opacityObserver = UserDefaults.standard.observe(\.panelOpacity, options: [.new]) { [weak self] _, _ in
+            DispatchQueue.main.async { self?.applyPopoverOpacity() }
         }
     }
 

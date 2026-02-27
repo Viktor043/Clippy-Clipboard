@@ -221,9 +221,10 @@ final class ClippyViewController: NSViewController {
         }
         let hostingController = NSHostingController(rootView: historyView)
 
+        // Read dynamic size from settings
         let panelSize = NSSize(
-            width: AppConstants.popoverWidth,
-            height: AppConstants.popoverHeight
+            width: CGFloat(UserDefaults.standard.object(forKey: AppConstants.popoverWidthKey) as? Double ?? Double(AppConstants.defaultPopoverWidth)),
+            height: CGFloat(UserDefaults.standard.object(forKey: AppConstants.popoverHeightKey) as? Double ?? Double(AppConstants.defaultPopoverHeight))
         )
 
         // Position above the Clippy character, centered horizontally
@@ -237,7 +238,6 @@ final class ClippyViewController: NSViewController {
         let origin = clampPanelOrigin(panelOrigin, panelSize: panelSize, screen: clippyWindow.screen)
 
         // Wrap the hosting view in an NSVisualEffectView with .popover material
-        // This gives the exact same background as NSPopover uses internally
         let effectView = NSVisualEffectView()
         effectView.material = .popover
         effectView.state = .active
@@ -245,6 +245,10 @@ final class ClippyViewController: NSViewController {
         effectView.wantsLayer = true
         effectView.layer?.cornerRadius = AppConstants.panelCornerRadius
         effectView.layer?.masksToBounds = true
+
+        // Apply blur intensity from settings
+        let blurIntensity = UserDefaults.standard.object(forKey: AppConstants.panelBlurKey) as? Double ?? AppConstants.defaultPanelBlur
+        effectView.alphaValue = CGFloat(blurIntensity)
 
         let hostingView = hostingController.view
         hostingView.translatesAutoresizingMaskIntoConstraints = false
@@ -280,6 +284,10 @@ final class ClippyViewController: NSViewController {
             panel.orderFront(nil)
             clipboardPanel = panel
         }
+
+        // Apply panel-level transparency from settings
+        let opacity = UserDefaults.standard.object(forKey: AppConstants.panelOpacityKey) as? Double ?? AppConstants.defaultPanelOpacity
+        clipboardPanel?.alphaValue = CGFloat(opacity)
 
         // Make key so keyboard input works in search field
         clipboardPanel?.makeKey()

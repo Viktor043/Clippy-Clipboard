@@ -14,6 +14,10 @@ struct SettingsView: View {
     @AppStorage("clippyScale") var clippyScale: Double = 1.0
     @AppStorage(AppConstants.appFontNameKey) var appFontName: String = AppConstants.defaultFontName
     @AppStorage(AppConstants.appFontSizeKey) var appFontSize: Double = AppConstants.defaultFontSize
+    @AppStorage(AppConstants.popoverWidthKey) var popoverWidth: Double = Double(AppConstants.defaultPopoverWidth)
+    @AppStorage(AppConstants.popoverHeightKey) var popoverHeight: Double = Double(AppConstants.defaultPopoverHeight)
+    @AppStorage(AppConstants.panelOpacityKey) var panelOpacity: Double = AppConstants.defaultPanelOpacity
+    @AppStorage(AppConstants.panelBlurKey) var panelBlurIntensity: Double = AppConstants.defaultPanelBlur
 
     @State private var excludedApps: [String] = UserDefaults.standard.stringArray(forKey: "excludedApps") ?? []
     @State private var newAppBundleID: String = ""
@@ -24,7 +28,103 @@ struct SettingsView: View {
                 Toggle("Show menu bar icon", isOn: $showMenuBarIcon)
             }
 
-            Section("Clipboard") {
+            Section("Menus") {
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack {
+                        Text("Width:")
+                        Spacer()
+                        Text("\(Int(popoverWidth)) px")
+                            .foregroundColor(.secondary)
+                    }
+                    Slider(value: $popoverWidth,
+                           in: Double(AppConstants.minPopoverWidth)...Double(AppConstants.maxPopoverWidth),
+                           step: 10)
+                }
+
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack {
+                        Text("Height:")
+                        Spacer()
+                        Text("\(Int(popoverHeight)) px")
+                            .foregroundColor(.secondary)
+                    }
+                    Slider(value: $popoverHeight,
+                           in: Double(AppConstants.minPopoverHeight)...Double(AppConstants.maxPopoverHeight),
+                           step: 10)
+                }
+
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack {
+                        Text("Transparency:")
+                        Spacer()
+                        Text("\(Int(panelOpacity * 100))%")
+                            .foregroundColor(.secondary)
+                    }
+                    Slider(value: $panelOpacity,
+                           in: AppConstants.minPanelOpacity...AppConstants.maxPanelOpacity,
+                           step: 0.05)
+                }
+
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack {
+                        Text("Background blur:")
+                        Spacer()
+                        Text("\(Int(panelBlurIntensity * 100))%")
+                            .foregroundColor(.secondary)
+                    }
+                    Slider(value: $panelBlurIntensity,
+                           in: AppConstants.minPanelBlur...AppConstants.maxPanelBlur,
+                           step: 0.05)
+                }
+            }
+
+            Section("Appearance") {
+                HStack {
+                    Text("Font:")
+                    Spacer()
+                    Picker("", selection: $appFontName) {
+                        Text("System").tag("System")
+                        ForEach(NSFontManager.shared.availableFontFamilies.sorted(), id: \.self) { name in
+                            Text(name).tag(name)
+                        }
+                    }
+                    .frame(width: 160)
+                }
+
+                HStack {
+                    Text("Font size:")
+                    Spacer()
+                    Picker("", selection: $appFontSize) {
+                        Text("10").tag(10.0)
+                        Text("11").tag(11.0)
+                        Text("12").tag(12.0)
+                        Text("13").tag(13.0)
+                        Text("14").tag(14.0)
+                        Text("16").tag(16.0)
+                    }
+                    .frame(width: 100)
+                }
+            }
+
+            Section("Clippy Character") {
+                Toggle("Show Clippy", isOn: $showClippyCharacter)
+                Toggle("Play sounds", isOn: $playSounds)
+                HStack {
+                    Text("Character size:")
+                    Spacer()
+                    Picker("", selection: $clippyScale) {
+                        Text("XS").tag(0.5)
+                        Text("S").tag(0.75)
+                        Text("M").tag(1.0)
+                        Text("L").tag(1.25)
+                        Text("XL").tag(1.5)
+                    }
+                    .pickerStyle(.segmented)
+                    .frame(width: 180)
+                }
+            }
+
+            Section("Advanced") {
                 HStack {
                     Text("History limit:")
                     Spacer()
@@ -61,56 +161,7 @@ struct SettingsView: View {
                     }
                     .frame(width: 100)
                 }
-            }
 
-            Section("Appearance") {
-                HStack {
-                    Text("Font:")
-                    Spacer()
-                    Picker("", selection: $appFontName) {
-                        Text("System").tag("System")
-                        ForEach(NSFontManager.shared.availableFontFamilies.sorted(), id: \.self) { name in
-                            Text(name).tag(name)
-                        }
-                    }
-                    .frame(width: 160)
-                }
-
-                HStack {
-                    Text("Font size:")
-                    Spacer()
-                    Picker("", selection: $appFontSize) {
-                        Text("10").tag(10.0)
-                        Text("11").tag(11.0)
-                        Text("12").tag(12.0)
-                        Text("13").tag(13.0)
-                        Text("14").tag(14.0)
-                        Text("16").tag(16.0)
-                    }
-                    .frame(width: 100)
-                }
-
-            }
-
-            Section("Clippy Character") {
-                Toggle("Show Clippy", isOn: $showClippyCharacter)
-                Toggle("Play sounds", isOn: $playSounds)
-                HStack {
-                    Text("Character size:")
-                    Spacer()
-                    Picker("", selection: $clippyScale) {
-                        Text("XS").tag(0.5)
-                        Text("S").tag(0.75)
-                        Text("M").tag(1.0)
-                        Text("L").tag(1.25)
-                        Text("XL").tag(1.5)
-                    }
-                    .pickerStyle(.segmented)
-                    .frame(width: 180)
-                }
-            }
-
-            Section("Advanced") {
                 DisclosureGroup("Capture Types") {
                     Toggle("Plain text", isOn: $captureText)
                     Toggle("Rich text", isOn: $captureRichText)
@@ -203,7 +254,7 @@ struct SettingsView: View {
             }
         }
         .formStyle(.grouped)
-        .frame(width: 400, height: 680)
+        .frame(width: 400, height: 750)
     }
 
     private func addExcludedApp() {

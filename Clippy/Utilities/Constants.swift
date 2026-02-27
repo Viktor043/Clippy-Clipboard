@@ -28,6 +28,26 @@ enum AppConstants {
     static let defaultFontName: String = "System"
     static let defaultFontSize: Double = 12.0
 
+    // Menu size customisation
+    static let popoverWidthKey = "popoverWidth"
+    static let popoverHeightKey = "popoverHeight"
+    static let defaultPopoverWidth: CGFloat = 320
+    static let defaultPopoverHeight: CGFloat = 480
+    static let minPopoverWidth: CGFloat = 250
+    static let maxPopoverWidth: CGFloat = 500
+    static let minPopoverHeight: CGFloat = 350
+    static let maxPopoverHeight: CGFloat = 700
+
+    // Panel appearance customisation
+    static let panelOpacityKey = "panelOpacity"
+    static let defaultPanelOpacity: Double = 1.0
+    static let minPanelOpacity: Double = 0.5
+    static let maxPanelOpacity: Double = 1.0
+    static let panelBlurKey = "panelBlurIntensity"
+    static let defaultPanelBlur: Double = 1.0
+    static let minPanelBlur: Double = 0.3
+    static let maxPanelBlur: Double = 1.0
+
     // UserDefaults keys
     static let showMenuBarIconKey = "showMenuBarIcon"
     static let clippyScaleKey = "clippyScale"

@@ -169,4 +169,16 @@ extension UserDefaults {
     @objc dynamic var clippyScale: Double {
         return object(forKey: AppConstants.clippyScaleKey) as? Double ?? AppConstants.clippyDefaultScale
     }
+    @objc dynamic var popoverWidth: Double {
+        return object(forKey: AppConstants.popoverWidthKey) as? Double ?? Double(AppConstants.defaultPopoverWidth)
+    }
+    @objc dynamic var popoverHeight: Double {
+        return object(forKey: AppConstants.popoverHeightKey) as? Double ?? Double(AppConstants.defaultPopoverHeight)
+    }
+    @objc dynamic var panelOpacity: Double {
+        return object(forKey: AppConstants.panelOpacityKey) as? Double ?? AppConstants.defaultPanelOpacity
+    }
+    @objc dynamic var panelBlurIntensity: Double {
+        return object(forKey: AppConstants.panelBlurKey) as? Double ?? AppConstants.defaultPanelBlur
+    }
 }
