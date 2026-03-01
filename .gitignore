@@ -35,11 +35,28 @@ Package.resolved
 *.app
 *.dSYM
 *.ipa
+dmg_staging/
 
 # Screenshots and temp files
 *.png
 !Resources/**/*.png
 !Assets.xcassets/**/*.png
+frontmost_*.png
 
 # Claude session data
 .claude/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+.venv/
+venv/
+
+# ML / data artifacts
+Chip/checkpoints/
+Chip/data/
+
+# Node
+node_modules/

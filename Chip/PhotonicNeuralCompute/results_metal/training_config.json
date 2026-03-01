@@ -1,0 +1,22 @@
+{
+  "batchSize" : 8,
+  "bpttSteps" : 1,
+  "dnMax" : 0.05000000074505806,
+  "dz" : 9.9999997473787516e-06,
+  "finalTemperature" : 0.81338328123092651,
+  "lr" : 0.0099999997764825821,
+  "nBase" : 1.4500000476837158,
+  "nBits" : 4,
+  "nInputsA" : 4,
+  "nInputsB" : 4,
+  "nLevels" : 16,
+  "nOutputsA" : 4,
+  "nOutputsB" : 4,
+  "nSteps" : 3000,
+  "nx" : 64,
+  "ny" : 64,
+  "nz" : 40,
+  "sparsityLambda" : 9.9999997473787516e-05,
+  "voxelPitch" : 1.9999999949504854e-06,
+  "wavelength" : 1.5499999790336005e-06
+}

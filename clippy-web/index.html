@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Clippy — Authentic Character Demo</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f0f0f0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      gap: 24px;
+    }
+
+    h1 { font-size: 18px; color: #333; }
+
+    #clippy-container {
+      /* The canvas is placed inside this container */
+    }
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      max-width: 600px;
+      justify-content: center;
+    }
+
+    .controls button {
+      padding: 4px 10px;
+      font-size: 12px;
+      cursor: pointer;
+      border: 1px solid #999;
+      border-radius: 4px;
+      background: #fff;
+    }
+    .controls button:hover { background: #e0e0e0; }
+
+    .info {
+      font-size: 13px;
+      color: #666;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Clippy Character Demo</h1>
+  <div id="clippy-container"></div>
+  <div class="info">Click Clippy for a reaction. Idle animations play every 5–15 seconds.</div>
+  <div class="controls" id="animation-buttons"></div>
+
+  <script src="clippy.js"></script>
+  <script>
+    (async () => {
+      const container = document.getElementById('clippy-container');
+      const clippy = new ClippyRenderer(container, { scale: 2, sounds: true });
+
+      await clippy.load('clippy-animations.json', 'clippit_sprite_map.png');
+      clippy.startIdleTimer();
+
+      // Build animation buttons
+      const btnContainer = document.getElementById('animation-buttons');
+      const names = clippy.getAnimationNames();
+
+      for (const name of names) {
+        const btn = document.createElement('button');
+        btn.textContent = name;
+        btn.addEventListener('click', () => {
+          clippy.stopIdleTimer();
+          clippy.play(name).then(() => {
+            clippy.showRestPose();
+            clippy.startIdleTimer();
+          });
+        });
+        btnContainer.appendChild(btn);
+      }
+    })();
+  </script>
+
+</body>
+</html>
